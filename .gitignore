@@ -4,7 +4,8 @@ package-lock.json
 
 
 # database
-main.sqlite3
+*.sqlite3
+*.sqlite3-journal
 
 # xed backup
 *~

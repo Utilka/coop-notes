@@ -2,9 +2,14 @@
   "name": "node-app",
   "version": "0.0.0",
   "private": true,
+  "authors": [
+    "Utilka, Andrii Bolshakov <uutilka@gmail.com>",
+    "Storm_Inside, Andrii Bolshakov"
+  ],
   "scripts": {
     "start": "SET DEBUG=express-locallibrary-tutorial:* | node ./bin/www",
-    "devstart": "SET DEBUG=express-locallibrary-tutorial:* | nodemon ./bin/www"
+    "devstartWin": "SET DEBUG=express-locallibrary-tutorial:* | nodemon ./bin/www",
+    "devstartLin": "DEBUG=express-locallibrary-tutorial:* nodemon ./bin/www"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
