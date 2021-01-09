@@ -14,7 +14,7 @@ const { hostname } = require('os');
  * Working with Database.
  */
 
-db.createTables()//
+// db.createTables()//
 
 //
 /**
