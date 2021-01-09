@@ -7,10 +7,10 @@
     "Storm_Inside, Andrii Bolshakov"
   ],
   "scripts": {
-    "startWin": "SET DEBUG=express-locallibrary-tutorial:* | node ./bin/www",
-    "startLin": "DEBUG=express-locallibrary-tutorial:* node ./bin/www",
-    "devstartWin": "SET DEBUG=express-locallibrary-tutorial:* | nodemon ./bin/www",
-    "devstartLin": "DEBUG=express-locallibrary-tutorial:* nodemon -V ./bin/www"
+    "startWin": "SET DEBUG=express-locallibrary-tutorial:* | node ./bin/www.js",
+    "startLin": "DEBUG=express-locallibrary-tutorial:* node ./bin/www.js",
+    "devstartWin": "SET DEBUG=express-locallibrary-tutorial:* | nodemon ./bin/www.js",
+    "devstartLin": "DEBUG=express-locallibrary-tutorial:* nodemon -V ./bin/www.js"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",

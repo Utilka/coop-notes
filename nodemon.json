@@ -1,3 +1,10 @@
 {
+    "ignore": [
+        ".git",
+        "node_modules/**/node_modules",
+        "./db_data"
+    ],
+    "watch": ["./bin/www", "./"],
+    "ext": "js, json",
     "delay": "2000"
 }

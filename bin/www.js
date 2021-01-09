@@ -14,9 +14,9 @@ const { hostname } = require('os');
  * Working with Database.
  */
 
-db.createTables()
+db.createTables()//
 
-
+//
 /**
  * Get port from environment and store in Express.
  */
