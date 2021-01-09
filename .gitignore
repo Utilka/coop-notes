@@ -9,3 +9,6 @@ package-lock.json
 
 # xed backup
 *~
+
+#webstorm stuff
+.idea/

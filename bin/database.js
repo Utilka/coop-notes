@@ -7,8 +7,9 @@ function createTables(){
 
     db.get("SELECT count(name) FROM sqlite_master WHERE type='table' AND name='lorem'", function(err, row){
       if (row['count(name)'] != 1){
-        // console.info("True")
-        db.run('CREATE TABLE ${tables[i]} (info (?))')
+        console.log("Ы");
+        console.info("True")
+        // db.run('CREATE TABLE ${tables[i]} (info (?))')
       }
     })
 
