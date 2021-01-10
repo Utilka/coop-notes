@@ -5,16 +5,9 @@
  */
 
 var app = require('../app');
-var db = require('./database')
 var debug = require('debug')('node-app:server');
 var http = require('http');
 const { hostname } = require('os');
-
-/**
- * Working with Database.
- */
-
-// db.createTables()//
 
 
 //

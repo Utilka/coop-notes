@@ -41,10 +41,10 @@ db.serialize(function () {
     // })
 })
 
-db_init(end_work)
+// db_init(end_work)
 
-// module.exports = {
-//     db : db,
-//     check_table_exist: check_table_exist,
-//     end_work:end_work
-// }
+module.exports = {
+    db_init: db_init,
+    end_work:end_work
+}
+
