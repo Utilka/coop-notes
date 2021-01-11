@@ -1,6 +1,54 @@
 extends layout
 
-block content
 
-  h2= canvas.title
-  h2 Or #{canvas.title} By This Way
+block main
+  .canvas
+  .left
+    button.openbtn-left(onclick='openNavLeft()', id="openbtn-left") 
+      svg.bi.bi-chevron-bar-right(xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewbox='0 0 16 16')
+        path(fill-rule='evenodd' d='M4.146 3.646a.5.5 0 0 0 0 .708L7.793 8l-3.647 3.646a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708 0zM11.5 1a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-1 0v-13a.5.5 0 0 1 .5-.5z')
+  #mySidebar-left.sidebar-left
+    a(href='#') About
+    a(href='#') Services
+    a(href='#') Clients
+    a(href='#') Contact
+
+  .right
+    button.openbtn-right(onclick='openNavRight()', id="openbtn-right") 
+      svg.bi.bi-chevron-bar-left(xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewbox='0 0 16 16')
+        path(fill-rule='evenodd' d='M11.854 3.646a.5.5 0 0 1 0 .708L8.207 8l3.647 3.646a.5.5 0 0 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 0 1 .708 0zM4.5 1a.5.5 0 0 0-.5.5v13a.5.5 0 0 0 1 0v-13a.5.5 0 0 0-.5-.5z')
+  #mySidebar-right.sidebar-right
+    a(href='#') About
+    a(href='#') Services
+    a(href='#') Clients
+    a(href='#') Contact
+  
+
+
+  script.
+    function openNavLeft() {
+    if(document.getElementById("mySidebar-left").style.width === '250px') {
+      document.getElementById("mySidebar-left").style.width = "0";
+      document.getElementById("openbtn-left").style.marginLeft = "0";
+      document.getElementById("openbtn-left").innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-bar-right" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4.146 3.646a.5.5 0 0 0 0 .708L7.793 8l-3.647 3.646a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708 0zM11.5 1a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-1 0v-13a.5.5 0 0 1 .5-.5z"/></svg>';
+    } else {
+        document.getElementById("mySidebar-left").style.width = "250px";
+        document.getElementById("openbtn-left").style.marginLeft = "250px";
+        document.getElementById("openbtn-left").innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-bar-left" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M11.854 3.646a.5.5 0 0 1 0 .708L8.207 8l3.647 3.646a.5.5 0 0 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 0 1 .708 0zM4.5 1a.5.5 0 0 0-.5.5v13a.5.5 0 0 0 1 0v-13a.5.5 0 0 0-.5-.5z"/></svg>';
+      }
+    }
+    function openNavRight() {
+    if(document.getElementById("mySidebar-right").style.width === '250px') {
+      console.log('close');
+      document.getElementById("mySidebar-right").style.width = "0";
+      document.getElementById("openbtn-right").style.marginRight = "0";
+      document.getElementById("openbtn-right").innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-bar-left" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M11.854 3.646a.5.5 0 0 1 0 .708L8.207 8l3.647 3.646a.5.5 0 0 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 0 1 .708 0zM4.5 1a.5.5 0 0 0-.5.5v13a.5.5 0 0 0 1 0v-13a.5.5 0 0 0-.5-.5z"/></svg>';
+    } else {
+        console.log('open');
+        document.getElementById("mySidebar-right").style.width = "250px";
+        document.getElementById("openbtn-right").style.marginRight = "250px";
+        document.getElementById("openbtn-right").innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-bar-right" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4.146 3.646a.5.5 0 0 0 0 .708L7.793 8l-3.647 3.646a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708 0zM11.5 1a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-1 0v-13a.5.5 0 0 1 .5-.5z"/></svg>';
+      }
+    }
+    
+  

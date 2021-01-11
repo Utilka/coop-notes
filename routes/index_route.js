@@ -6,7 +6,7 @@ var canvList = op.canvList
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  return res.redirect(`/canvas/${canvList[0].title}`);
+  return res.redirect(`/Canvas/${canvList[0].title}`);
 });
 
 module.exports = router;
