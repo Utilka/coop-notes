@@ -14,17 +14,17 @@
 
 .sidebar-left {
     height: 100%;
-    width: 0;
+    width: 250px;
     position: fixed;
     z-index: 1;
     top: 0;
-    left: 0;
+    left: -250px;
     background-color: #111;
     overflow-x: hidden;
     transition: 0.5s;
     padding-top: 60px;
   }
-  
+
   .sidebar-left a {
     padding: 8px 8px 8px 32px;
     text-decoration: none;
@@ -33,11 +33,11 @@
     display: block;
     transition: 0.3s;
   }
-  
+
   .sidebar-left a:hover {
     color: #f1f1f1;
   }
-  
+
   .sidebar-left .closebtn {
     position: absolute;
     top: 0;
@@ -45,7 +45,7 @@
     font-size: 36px;
     margin-left: 50px;
   }
-  
+
   .openbtn-left {
     margin-top: 40vh;
     min-height: 10vh;
@@ -57,7 +57,7 @@
     border: none;
     transition: 0.5s;
   }
-  
+
   .openbtn-left:hover {
     background-color: black;
     color: white;
@@ -65,17 +65,17 @@
 
   .sidebar-right {
     height: 100%;
-    width: 0;
+    width: 250px;
     position: fixed;
     z-index: 1;
     top: 0;
-    right: 0;
+    right: -250px;
     background-color: #111;
     overflow-x: hidden;
     transition: 0.5s;
     padding-top: 60px;
   }
-  
+
   .sidebar-right a {
     padding: 8px 8px 8px 32px;
     text-decoration: none;
@@ -84,12 +84,12 @@
     display: block;
     transition: 0.3s;
   }
-  
+
   .sidebar-right a:hover {
     color: #f1f1f1;
   }
-  
-  
+
+
   .openbtn-right {
     margin-top: 40vh;
     min-height: 10vh;
@@ -101,7 +101,7 @@
     border: none;
     transition: 0.5s;
   }
-  
+
   .openbtn-right:hover {
     background-color: black;
     color: white;
