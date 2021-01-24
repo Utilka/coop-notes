@@ -5,7 +5,8 @@
     "app_desc": "Local service that provides cooperative canvas for notes",
     "node_port": 5000,
     "json_indentation": 4,
-    "database_file_path": "./db_data/main.sqlite3"
+    "database_file_path": "./db_data/main.sqlite3",
+    "create_sample_data": true
   },
   "testing": {
     "config_id": "testing",
