@@ -1,26 +1,33 @@
-var sqlite3 = require('sqlite3').verbose()
-var db = new sqlite3.Database('./db_data/main.sqlite3')
+let sqlite3 = require('sqlite3').verbose();
+let db = new sqlite3.Database('./db_data/main.sqlite3');
+let User = require('../lib/User')
+let Canvas = require('../lib/Canvas');
+let Note = require('../lib/Note');
+let Connection = require('../lib/Connection');
+let Picture = require('../lib/Picture');
 
 function db_init() {
     return new Promise(function (resolve, reject) {
-        db.run(`PRAGMA foreign_keys = ON;`);
+        db.serialize(function () {
+            db.run(`PRAGMA foreign_keys = ON;`);
 
-        db.run(`CREATE TABLE IF NOT EXISTS "users" (
+            db.run(`CREATE TABLE IF NOT EXISTS "users" (
                 "id" INTEGER PRIMARY KEY,
                 "nick" TEXT NOT NULL UNIQUE,
                 "settings" TEXT
                 );`);
 
-        db.run(`CREATE TABLE IF NOT EXISTS "canvasses" (
+            db.run(`CREATE TABLE IF NOT EXISTS "canvasses" (
                 "id" INTEGER PRIMARY KEY,
                 "title" TEXT,
                 "owner_id" INTEGER,
                 "created_at" INTEGER DEFAULT (strftime('%s','now')),
+                "default_perm" INTEGER DEFAULT (1), -- ENUM ('none','read','write')
                 "settings" TEXT,
                     FOREIGN KEY (owner_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE
                 );`);
 
-        db.run(`CREATE TABLE IF NOT EXISTS "canvasses_permissions" (
+            db.run(`CREATE TABLE IF NOT EXISTS "canvasses_permissions" (
                 "user_id" INTEGER NOT NULL,
                 "canvas_id" INTEGER NOT NULL,
                 "permission" INTEGER, -- ENUM ('none','read','write')
@@ -29,7 +36,7 @@ function db_init() {
                     FOREIGN KEY (canvas_id) REFERENCES canvasses (id) ON UPDATE CASCADE ON DELETE CASCADE
                 );`);
 
-        db.run(`CREATE TABLE IF NOT EXISTS "notes" (
+            db.run(`CREATE TABLE IF NOT EXISTS "notes" (
                 "id" INTEGER PRIMARY KEY,
                 "title" TEXT,
                 "canvas_id" INTEGER NOT NULL,
@@ -47,7 +54,7 @@ function db_init() {
                     FOREIGN KEY (last_editor_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL
                 );`);
 
-        db.run(`CREATE TABLE IF NOT EXISTS "connections" (
+            db.run(`CREATE TABLE IF NOT EXISTS "connections" (
                 "id" INTEGER PRIMARY KEY,
                 "title" TEXT,
                 "canvas_id" INTEGER NOT NULL,
@@ -70,7 +77,7 @@ function db_init() {
                     FOREIGN KEY (last_editor_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL
                 );
                 `);
-        db.run(`CREATE TABLE IF NOT EXISTS "pictures" (
+            db.run(`CREATE TABLE IF NOT EXISTS "pictures" (
                 "id" INTEGER PRIMARY KEY,
                 "title" TEXT,
                 "canvas_id" INTEGER NOT NULL,
@@ -89,37 +96,39 @@ function db_init() {
                 );
                 `);
 
-        db.run(`CREATE TRIGGER IF NOT EXISTS note_last_edited_upd AFTER UPDATE OF last_editor_id ON notes
+            db.run(`CREATE TRIGGER IF NOT EXISTS note_last_edited_upd AFTER UPDATE OF last_editor_id ON notes
                 BEGIN
                     UPDATE notes SET last_edited_at=strftime('%s','now') WHERE id = NEW.id;
                 END;
                 `);
-        db.run(`CREATE TRIGGER IF NOT EXISTS conn_last_edited_upd AFTER UPDATE OF last_editor_id ON connections
+            db.run(`CREATE TRIGGER IF NOT EXISTS conn_last_edited_upd AFTER UPDATE OF last_editor_id ON connections
                 BEGIN
                     UPDATE connections SET last_edited_at=strftime('%s','now') WHERE id = NEW.id;
                 END;
                 `);
-        db.run(`CREATE TRIGGER IF NOT EXISTS pic_last_edited_upd AFTER UPDATE OF last_editor_id ON pictures
+            db.run(`CREATE TRIGGER IF NOT EXISTS pic_last_edited_upd AFTER UPDATE OF last_editor_id ON pictures
                 BEGIN
                     UPDATE pictures SET last_edited_at=strftime('%s','now') WHERE id = NEW.id;
                 END;
                 `);
 
-        db.run(`CREATE TRIGGER IF NOT EXISTS note_last_editor_init AFTER INSERT ON notes
+            db.run(`CREATE TRIGGER IF NOT EXISTS note_last_editor_init AFTER INSERT ON notes
                 BEGIN
                     UPDATE notes SET last_editor_id=NEW.owner_id WHERE id = NEW.id;
                 END;
                 `);
-        db.run(`CREATE TRIGGER IF NOT EXISTS conn_last_editor_init AFTER INSERT ON connections
+            db.run(`CREATE TRIGGER IF NOT EXISTS conn_last_editor_init AFTER INSERT ON connections
                 BEGIN
                     UPDATE connections SET last_editor_id=NEW.owner_id WHERE id = NEW.id;
                 END;
                 `);
-        db.run(`CREATE TRIGGER IF NOT EXISTS pic_last_editor_init AFTER INSERT on pictures
+            db.run(`CREATE TRIGGER IF NOT EXISTS pic_last_editor_init AFTER INSERT on pictures
                 BEGIN
                     UPDATE pictures SET last_editor_id=NEW.owner_id WHERE id = NEW.id;
                 END;
                 `);
+            console.log("initialized database")
+        })
         resolve()
     })
 }
@@ -202,210 +211,446 @@ function data_dict_stringify(data_dict) {
         const [key, value] = entry;
         data_string += `${key} = ${value},`
     });
-    data_string = data_string.substring(0, data_string.length-1);
+    data_string = data_string.substring(0, data_string.length - 1);
     return data_string;
 }
+
 function data_list_stringify(data_list) {
     // {"key":"value"}
     let data_string = ""
     data_list.forEach(entry => {
         data_string += `${entry},`
     });
-    data_string = data_string.substring(0, data_string.length-1);
+    data_string = data_string.substring(0, data_string.length - 1);
     return data_string;
 }
-class data_interaction {
-    get_user(user_id) {
+
+class Data_interaction {
+    static get_user(user_id) {
         return new Promise(function (resolve, reject) {
             db.get(`SELECT * FROM users WHERE id = ${user_id};`, [], function (err, row) {
-                resolve(row)
+                if (err) {
+                    reject(`Unable to SELECT user with id ${user_id}| err :${err}`)
+                }
+                if (row !== undefined ) {
+                    let res = new User()
+                    Object.assign(res, row)
+                    resolve(res)
+                } else {
+                    reject(`No user with id ${user_id} were found`)
+                }
+
             })
         })
     }
-    get_canvas(canvas_id) {
+
+    static get_canvas(canvas_id) {
         return new Promise(function (resolve, reject) {
             db.get(`SELECT * FROM canvasses WHERE id = ${canvas_id};`, [], function (err, row) {
-                resolve(row)
+                if (err) {
+                    reject(`Unable to SELECT canvas with id ${canvas_id}| err :${err}`)
+                }
+                if (row !== undefined ) {
+                    let res = new Canvas()
+                    Object.assign(res, row)
+                    resolve(res)
+                } else {
+                    reject(`No canvas with id ${user_id} were found`)
+                }
+
             })
         })
     }
-    get_canvas_permission(user_id, canvas_id) {
+
+    static get_canvas_permission(user_id, canvas_id) {
         return new Promise(function (resolve, reject) {
             db.get(`SELECT * FROM canvasses_permissions WHERE (user_id = ${user_id} and canvas_id = ${canvas_id});`, [], function (err, row) {
-                resolve(row)
+                if (err) {
+                    reject(`Unable to SELECT canvas_permission with U_id ${user_id}, C_id ${canvas_id} | err :${err}`)
+                }
+                if (row !== undefined ) {
+                    resolve(row)
+                } else {
+                    reject(`No canvas_permission with id ${user_id} were found`)
+                }
+
+
             })
         })
     }
-    get_note(note_id) {
+
+    static get_note(note_id) {
         return new Promise(function (resolve, reject) {
             db.get(`SELECT * FROM notes WHERE id = ${note_id};`, [], function (err, row) {
-                resolve(row)
+                if (err) {
+                    reject(`Unable to SELECT note with id ${note_id}| err :${err}`)
+                }
+                if (row !== undefined) {
+                    let res = new Note()
+                    Object.assign(res, row)
+                    resolve(res)
+                } else {
+                    reject(`No note with id ${user_id} were found`)
+                }
+
             })
         })
     }
-    get_connection(connection_id) {
+
+    static get_connection(connection_id) {
         return new Promise(function (resolve, reject) {
             db.get(`SELECT * FROM connections WHERE id = ${connection_id};`, [], function (err, row) {
-                resolve(row)
+                if (err) {
+                    reject(`Unable to SELECT connection with id ${connection_id}| err :${err}`)
+                }
+                if (row !== undefined ) {
+                    let res = new Connection()
+                    Object.assign(res, row)
+                    resolve(res)
+                } else {
+                    reject(`No connection with id ${connection_id} were found`)
+                }
+
             })
         })
     }
-    get_picture(picture_id) {
+
+    static get_picture(picture_id) {
         return new Promise(function (resolve, reject) {
             db.get(`SELECT * FROM pictures WHERE id = ${picture_id};`, [], function (err, row) {
-                resolve(row)
+                if (err) {
+                    reject(`Unable to SELECT picture with id ${picture_id}| err :${err}`)
+                }
+                if (row !== undefined ) {
+                    let res = new Picture()
+                    Object.assign(res, row)
+                    resolve(res)
+                } else {
+                    reject(`No picture with id ${picture_id} were found`)
+                }
+
             })
         })
     }
 
-    upd_user(user_id,data) {
-        let data_string=data_dict_stringify(data)
+    static upd_user(user_id, data) {
+        let data_string = data_dict_stringify(data)
         return new Promise(function (resolve, reject) {
-            db.run(`UPDATE users SET ${data_string} WHERE id = ${user_id};`, [], function (err, row) {
-                resolve(row)
-            })
-        })
-    }
-    upd_canvas(canvas_id,data) {
-        let data_string=data_dict_stringify(data)
-        return new Promise(function (resolve, reject) {
-            db.run(`UPDATE canvasses SET ${data_string} WHERE id = ${canvas_id};`, [], function (err, row) {
-                resolve(row)
-            })
-        })
-    }
-    upd_canvas_permission(user_id,canvas_id,data) {
-        let data_string=data_dict_stringify(data)
-        return new Promise(function (resolve, reject) {
-            db.run(`UPDATE canvasses_permissions SET ${data_string} WHERE (user_id = ${user_id} and canvas_id = ${canvas_id});`, [], function (err, row) {
-                resolve(row)
-            })
-        })
-    }
-    upd_note(note_id,data) {
-        let data_string=data_dict_stringify(data)
-        return new Promise(function (resolve, reject) {
-            db.run(`UPDATE notes SET ${data_string} WHERE id = ${note_id};`, [], function (err, row) {
-                resolve(row)
-            })
-        })
-    }
-    upd_connection(connection_id,data) {
-        let data_string=data_dict_stringify(data)
-        return new Promise(function (resolve, reject) {
-            db.run(`UPDATE notes SET ${data_string} WHERE id = ${connection_id};`, [], function (err, row) {
-                resolve(row)
-            })
-        })
-    }
-    upd_picture(picture_id,data) {
-        let data_string=data_dict_stringify(data)
-        return new Promise(function (resolve, reject) {
-            db.run(`UPDATE notes SET ${data_string} WHERE id = ${picture_id};`, [], function (err, row) {
-                resolve(row)
+            db.run(`UPDATE users SET ${data_string} WHERE id = ${user_id};`, [], function (err) {
+                if (err) {
+                    reject(`Unable to update user with id ${user_id} and data ${data_string}| err :${err}`)
+                }
+                resolve()
             })
         })
     }
 
-    get_user_by_nick(user_nick) {
+    static upd_canvas(canvas_id, data) {
+        let data_string = data_dict_stringify(data)
+        return new Promise(function (resolve, reject) {
+            db.run(`UPDATE canvasses SET ${data_string} WHERE id = ${canvas_id};`, [], function (err) {
+                if (err) {
+                    reject(`Unable to update canvas with id ${canvas_id} and data ${data_string}| err :${err}`)
+                }
+                resolve()
+            })
+        })
+    }
+
+    static upd_canvas_permission(user_id, canvas_id, data) {
+        let data_string = data_dict_stringify(data)
+        return new Promise(function (resolve, reject) {
+            db.run(`UPDATE canvasses_permissions SET ${data_string} WHERE (user_id = ${user_id} and canvas_id = ${canvas_id});`, [], function (err) {
+                if (err) {
+                    reject(`Unable to update canvas_permission with u_id ${user_id}, c_id ${canvas_id} and data ${data_string}| err :${err}`)
+                }
+                resolve()
+            })
+        })
+    }
+
+    static upd_note(note_id, data) {
+        let data_string = data_dict_stringify(data)
+        return new Promise(function (resolve, reject) {
+            db.run(`UPDATE notes SET ${data_string} WHERE id = ${note_id};`, [], function (err) {
+                if (err) {
+                    reject(`Unable to update note with id ${note_id} and data ${data_string}| err :${err}`)
+                }
+                resolve()
+            })
+        })
+    }
+
+    static upd_connection(connection_id, data) {
+        let data_string = data_dict_stringify(data)
+        return new Promise(function (resolve, reject) {
+            db.run(`UPDATE notes SET ${data_string} WHERE id = ${connection_id};`, [], function (err) {
+                if (err) {
+                    reject(`Unable to update connection with id ${connection_id} and data ${data_string}| err :${err}`)
+                }
+                resolve()
+            })
+        })
+    }
+
+    static upd_picture(picture_id, data) {
+        let data_string = data_dict_stringify(data)
+        return new Promise(function (resolve, reject) {
+            db.run(`UPDATE notes SET ${data_string} WHERE id = ${picture_id};`, [], function (err) {
+                if (err) {
+                    reject(`Unable to update picture with id ${picture_id} and data ${data_string}| err :${err}`)
+                }
+                resolve()
+            })
+        })
+    }
+
+    static get_user_by_nick(user_nick) {
         return new Promise(function (resolve, reject) {
             db.get(`SELECT * FROM users WHERE nick = "${user_nick}";`, [], function (err, row) {
-                resolve(row)
-            })
-        })
-    }
-    get_permitted_canvasses(user_id) {
-        return new Promise(function (resolve, reject) {
-            db.get(`SELECT * FROM canvasses_permissions WHERE (user_id = ${user_id} and permission > 0);`, [], function (err, row) {
-                resolve(row)
-            })
-        })
-    }
-    get_canvasses_list(canvas_id_list) {
-        let str_canvas_id_list = data_list_stringify(canvas_id_list)
-        return new Promise(function (resolve, reject) {
-            db.get(`SELECT * FROM canvasses WHERE id IN (${str_canvas_id_list});`, [], function (err, row) {
-                resolve(row)
-            })
-        })
-    }
-    get_notes_in_canvas(canvas_id) {
-        return new Promise(function (resolve, reject) {
-            db.get(`SELECT * FROM notes WHERE canvas_id = ${canvas_id};`, [], function (err, row) {
-                resolve(row)
-            })
-        })
-    }
-    get_connections_in_canvas(canvas_id) {
-        return new Promise(function (resolve, reject) {
-            db.get(`SELECT * FROM connections WHERE canvas_id = ${canvas_id};`, [], function (err, row) {
-                resolve(row)
-            })
-        })
-    }
-    get_pictures_in_canvas(canvas_id) {
-        return new Promise(function (resolve, reject) {
-            db.get(`SELECT * FROM pictures WHERE canvas_id = ${canvas_id};`, [], function (err, row) {
-                resolve(row)
+                if (err) {
+                    reject(`Unable to select user with nick ${user_nick}| err :${err}`)
+                }
+                if ((row !== undefined)) {
+                    let res = new User()
+                    Object.assign(res, row)
+                    resolve(res)
+                } else {
+                    reject(`No user with nick ${user_nick} were found`)
+                }
+
             })
         })
     }
 
-    insert_user(user_nick) {
+    static get_permitted_canvasses(user_id) {
+        // returns list of canvas id that user can access
+        return new Promise(function (resolve, reject) {
+            db.all(`SELECT * FROM canvasses_permissions WHERE (user_id = ${user_id} and permission > 0);`, [], function (err, rows) {
+                if (err) {
+                    reject(`Unable to select permitted_canvasses with user_id ${user_id}| err :${err}`)
+                }
+                if ((rows !== undefined) && (rows.length > 0)) {
+                    let res = []
+                    rows.forEach(row => {
+                        res.push(row.canvas_id)
+                    });
+                    db.all(`SELECT id FROM canvasses WHERE (default_perm > 0) OR (owner_id = ${user_id});`, [], function (err, rows) {
+                        if (err) {
+                            reject(`Unable to select canvasses with (default_perm > 0) OR (owner_id = ${user_id})| err :${err}`)
+                        }
+                        if ((rows !== undefined) && (rows.length > 0)) {
+                            rows.forEach(row => {
+                                res.push(row.id)
+                            });
+                        }
+                        if (res.length === 0) {
+                            reject(`User with id ${user_id} can't access any canvasses`)
+                        }
+                        res = Array.from([...new Set(res)]); // remove duplicates
+                        resolve(res)
+                    })
+                }
+
+
+            })
+        })
+    }
+
+    static get_canvasses_list(canvas_id_list) {
+        let str_canvas_id_list = data_list_stringify(canvas_id_list)
+        return new Promise(function (resolve, reject) {
+            db.all(`SELECT * FROM canvasses WHERE id IN (${str_canvas_id_list});`, [], function (err, rows) {
+                if (err) {
+                    reject(`Unable to select canvases with id ${canvas_id_list}| err :${err}`)
+                }
+                if ((rows !== undefined) && (rows.length > 0)) {
+                    let res = []
+                    rows.forEach(row => {
+                        let res_row = new Canvas() // specify type of object
+                        Object.assign(res_row, row)
+                        res.push(res_row)
+                    });
+                    resolve(res)
+                } else {
+                    reject(`No canvases with id ${canvas_id_list}`)
+                }
+
+            })
+        })
+    }
+
+    static get_notes_in_canvas(canvas_id) {
+        return new Promise(function (resolve, reject) {
+            db.all(`SELECT * FROM notes WHERE canvas_id = ${canvas_id};`, [], function (err, rows) {
+                if (err) {
+                    reject(`Unable to select notes with canvas_id ${canvas_id}| err :${err}`)
+                }
+                if ((rows !== undefined) && (rows.length > 0)) {
+                    let res = []
+                    rows.forEach(row => {
+                        let res_row = new Note() // specify type of object
+                        Object.assign(res_row, row)
+                        res.push(res_row)
+                    });
+                    resolve(res)
+                } else {
+                    reject(`No notes with canvas_id ${canvas_id}`)
+                }
+            })
+        })
+    }
+
+    static get_connections_in_canvas(canvas_id) {
+        return new Promise(function (resolve, reject) {
+            db.all(`SELECT * FROM connections WHERE canvas_id = ${canvas_id};`, [], function (err, rows) {
+                if (err) {
+                    reject(`Unable to select connections with canvas_id ${canvas_id}| err :${err}`)
+                }
+                if ((rows !== undefined) && (rows.length > 0)) {
+                    let res = []
+                    rows.forEach(row => {
+                        let res_row = new Connection() // specify type of object
+                        Object.assign(res_row, row)
+                        res.push(res_row)
+                    });
+                    resolve(res)
+                } else {
+                    reject(`No connections with canvas_id ${canvas_id}`)
+                }
+            })
+        })
+    }
+
+    static get_pictures_in_canvas(canvas_id) {
+        return new Promise(function (resolve, reject) {
+            db.all(`SELECT * FROM pictures WHERE canvas_id = ${canvas_id};`, [], function (err, rows) {
+                if (err) {
+                    reject(`Unable to select pictures with canvas_id ${canvas_id}| err :${err}`)
+                }
+                if ((rows !== undefined) && (rows.length > 0)) {
+                    let res = []
+                    rows.forEach(row => {
+                        let res_row = new Picture() // specify type of object
+                        Object.assign(res_row, row)
+                        res.push(res_row)
+                    });
+                    resolve(res)
+                } else {
+                    reject(`No pictures with canvas_id ${canvas_id}`)
+                }
+            })
+        })
+    }
+
+    static insert_user(user_nick) {
         let str_data_list = data_list_stringify(arguments);
         return new Promise(function (resolve, reject) {
-            db.get(`INSERT INTO users (nick) VALUES (${str_data_list});";`, [], function (err, row) {
-                resolve(row)
+            db.get(`INSERT INTO users (nick) VALUES (${str_data_list});";`, [], function (err) {
+                if (err) {
+                    reject(`Unable to insert user with user_nick ${user_nick}| err :${err}`)
+                }
+                resolve()
             })
         })
     }
-    insert_canvas(title,owner_id) {
+
+    static insert_canvas(title, owner_id) {
         let str_data_list = data_list_stringify(arguments);
         return new Promise(function (resolve, reject) {
-            db.get(`INSERT INTO canvasses (title,owner_id) VALUES (${str_data_list});`, [], function (err, row) {
-                resolve(row)
+            db.get(`INSERT INTO canvasses (title,owner_id) VALUES (${str_data_list});`, [], function (err) {
+                if (err) {
+                    reject(`Unable to insert canvas with user_nick ${title} owner_id ${owner_id}| err :${err}`)
+                }
+                resolve()
             })
         })
     }
-    insert_canvas_permission(user_id,canvas_id,permission) {
+
+    static insert_canvas_permission(user_id, canvas_id, permission) {
         let str_data_list = data_list_stringify(arguments)
         return new Promise(function (resolve, reject) {
-            db.get(`INSERT INTO canvasses_permissions (user_id,canvas_id,permission) VALUES (${str_data_list});`, [], function (err, row) {
-                resolve(row)
+            db.get(`INSERT INTO canvasses_permissions (user_id,canvas_id,permission) VALUES (${str_data_list});`, [], function (err) {
+                if (err) {
+                    reject(`Unable to insert canvas_permission with user_id ${user_id} canvas_id ${canvas_id}| err :${err}`)
+                }
+                resolve()
             })
         })
     }
-    insert_note(canvas_id,owner_id,coordinate_x,coordinate_y) {
+
+    static insert_note(canvas_id, owner_id, coordinate_x, coordinate_y) {
         let str_data_list = data_list_stringify(arguments)
         return new Promise(function (resolve, reject) {
-            db.get(`INSERT INTO notes (canvas_id,owner_id,coordinate_x,coordinate_y) VALUES (${str_data_list});`, [], function (err, row) {
-                resolve(row)
+            db.get(`INSERT INTO notes (canvas_id,owner_id,coordinate_x,coordinate_y) VALUES (${str_data_list});`, [], function (err) {
+                if (err) {
+                    reject(`Unable to insert note with canvas_id ${canvas_id} owner_id ${owner_id}| err :${err}`)
+                }
+                resolve()
             })
         })
     }
-    insert_connection(canvas_id,owner_id,
-                      origin_conn_type,origin_conn_id,origin_conn_pos_type,origin_conn_pos,
-                      target_conn_type,target_conn_id,target_conn_pos_type,target_conn_pos) {
+
+    static insert_connection(canvas_id, owner_id,
+                      origin_conn_type, origin_conn_id, origin_conn_pos_type, origin_conn_pos,
+                      target_conn_type, target_conn_id, target_conn_pos_type, target_conn_pos) {
         let str_data_list = data_list_stringify(arguments)
         return new Promise(function (resolve, reject) {
             db.get(`INSERT INTO connections
                     (canvas_id,owner_id,
                     origin_conn_type,origin_conn_id,origin_conn_pos_type,origin_conn_pos,
                     target_conn_type,target_conn_id,target_conn_pos_type,target_conn_pos) 
-                    VALUES (${str_data_list});`, [], function (err, row) {
-                resolve(row)
-            })
-        })
-    }
-    insert_picture(canvas_id,owner_id,coordinate_x,coordinate_y,content) {
-        let str_data_list = data_list_stringify(arguments)
-        return new Promise(function (resolve, reject) {
-            db.get(`INSERT INTO pictures (canvas_id,owner_id,coordinate_x,coordinate_y,content) VALUES (${str_data_list});`, [], function (err, row) {
-                resolve(row)
+                    VALUES (${str_data_list});`, [], function (err) {
+                if (err) {
+                    reject(`Unable to insert connection with canvas_id ${canvas_id} owner_id ${owner_id}| err :${err}`)
+                }
+                resolve()
             })
         })
     }
 
+    static insert_picture(canvas_id, owner_id, coordinate_x, coordinate_y, content) {
+        let str_data_list = data_list_stringify(arguments)
+        return new Promise(function (resolve, reject) {
+            db.get(`INSERT INTO pictures (canvas_id,owner_id,coordinate_x,coordinate_y,content) VALUES (${str_data_list});`, [], function (err) {
+                if (err) {
+                    reject(`Unable to insert picture with canvas_id ${canvas_id} owner_id ${owner_id}| err :${err}`)
+                }
+                resolve()
+            })
+        })
+    }
+
+    static check_user_canvas_permission(user_id, canvas_id) {
+        //returns permission value
+        return new Promise(function (resolve, reject) {
+            Data_interaction.get_canvas_permission(user_id, canvas_id).then(function (row) {
+                resolve(row.permission)
+            }).catch(function (reason) {
+                if (reason === `No canvas_permission with id ${user_id} were found`) {
+                    db.get(`SELECT owner_id,default_perm FROM canvasses WHERE id = ${canvas_id}`, [], function (err, row) {
+                        if (err) {
+                            reject(`Unable to SELECT FROM canvas with id = ${canvas_id} | err :${err}`)
+                        }
+                        if ((row !== undefined)) {
+                            if (row.owner_id === user_id) {
+                                resolve(2) // if user is owner then give them write access
+                            } else {
+                                resolve(row.default_perm)
+                            }
+                        } else {
+                            reject(`No canvas with id ${canvas_id} were found`)
+                        }
+
+
+                    })
+
+                } else {
+                    // reject(reason)
+                }
+            })
+        })
+    }
 }
 
 module.exports = {
@@ -414,6 +659,6 @@ module.exports = {
     "check_db_empty": check_db_empty,
     "db_load_sample_data": db_load_sample_data,
     "end_work": end_work,
-    "di":data_interaction
+    "di": Data_interaction
 }
 
