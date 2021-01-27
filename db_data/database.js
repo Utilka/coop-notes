@@ -270,7 +270,7 @@ class Data_interaction {
                 if (row !== undefined) {
                     resolve(row)
                 } else {
-                    reject(`No canvas_permission with id ${user_id} were found`)
+                    reject(`No canvas_permission with id ${user_id} ${canvas_id} were found`)
                 }
 
 
