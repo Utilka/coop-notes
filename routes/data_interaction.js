@@ -71,7 +71,7 @@ router.get('/get_picture', (req, res) => {
 
 
 router.post('/upd_user', (req, res) => {
-    //POST /upd_user?user_id=1 body{nick:andrey}
+    //POST /upd_user?user_id=1 body{nick:"fooboo"}
     let upd_user_id = parseInt(req.query.user_id, 10);
     let data = req.body;
     db.di.upd_user(upd_user_id, data).then(res.status(200).send('All done!')).catch(function (reason) {
