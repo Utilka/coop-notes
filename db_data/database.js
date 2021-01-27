@@ -209,14 +209,13 @@ function data_dict_stringify(data_dict) {
     let data_string = ""
     Object.entries(data_dict).forEach(entry => {
         const [key, value] = entry;
-        data_string += `${key} = ${value},`
+        data_string += `${key} = "${value}",`
     });
     data_string = data_string.substring(0, data_string.length - 1);
     return data_string;
 }
 
 function data_list_stringify(data_list) {
-    // {"key":"value"}
     let data_string = ""
     data_list.forEach(entry => {
         data_string += `${entry},`
@@ -232,7 +231,7 @@ class Data_interaction {
                 if (err) {
                     reject(`Unable to SELECT user with id ${user_id}| err :${err}`)
                 }
-                if (row !== undefined ) {
+                if (row !== undefined) {
                     let res = new User()
                     Object.assign(res, row)
                     resolve(res)
@@ -250,7 +249,7 @@ class Data_interaction {
                 if (err) {
                     reject(`Unable to SELECT canvas with id ${canvas_id}| err :${err}`)
                 }
-                if (row !== undefined ) {
+                if (row !== undefined) {
                     let res = new Canvas()
                     Object.assign(res, row)
                     resolve(res)
@@ -268,7 +267,7 @@ class Data_interaction {
                 if (err) {
                     reject(`Unable to SELECT canvas_permission with U_id ${user_id}, C_id ${canvas_id} | err :${err}`)
                 }
-                if (row !== undefined ) {
+                if (row !== undefined) {
                     resolve(row)
                 } else {
                     reject(`No canvas_permission with id ${user_id} were found`)
@@ -303,7 +302,7 @@ class Data_interaction {
                 if (err) {
                     reject(`Unable to SELECT connection with id ${connection_id}| err :${err}`)
                 }
-                if (row !== undefined ) {
+                if (row !== undefined) {
                     let res = new Connection()
                     Object.assign(res, row)
                     resolve(res)
@@ -321,7 +320,7 @@ class Data_interaction {
                 if (err) {
                     reject(`Unable to SELECT picture with id ${picture_id}| err :${err}`)
                 }
-                if (row !== undefined ) {
+                if (row !== undefined) {
                     let res = new Picture()
                     Object.assign(res, row)
                     resolve(res)
@@ -592,8 +591,8 @@ class Data_interaction {
     }
 
     static insert_connection(canvas_id, owner_id,
-                      origin_conn_type, origin_conn_id, origin_conn_pos_type, origin_conn_pos,
-                      target_conn_type, target_conn_id, target_conn_pos_type, target_conn_pos) {
+                             origin_conn_type, origin_conn_id, origin_conn_pos_type, origin_conn_pos,
+                             target_conn_type, target_conn_id, target_conn_pos_type, target_conn_pos) {
         let str_data_list = data_list_stringify(arguments)
         return new Promise(function (resolve, reject) {
             db.get(`INSERT INTO connections

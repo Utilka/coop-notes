@@ -23,11 +23,11 @@ db.db_init().then(function () {
     // }).catch(function (reason) {
     //     console.log(reason)
     // })
-    db.di.check_user_canvas_permission(1, 1).then(res => {
-        console.log(res)
-    }).catch(function (reason) {
-        console.log(reason)
-    })
+    // db.di.check_user_canvas_permission(1, 1).then(res => {
+    //     console.log(res)
+    // }).catch(function (reason) {
+    //     console.log(reason)
+    // })
     // db.di.check_user_canvas_permission(1, 1).then(res => {
     //     console.log(res)
     // }).catch(function (reason) {
