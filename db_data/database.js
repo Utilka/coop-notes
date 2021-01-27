@@ -209,7 +209,7 @@ function data_dict_stringify(data_dict) {
     let data_string = ""
     Object.entries(data_dict).forEach(entry => {
         const [key, value] = entry;
-        data_string += `${key} = ${value},`
+        data_string += `${key} = "${value}",`
     });
     data_string = data_string.substring(0, data_string.length - 1);
     return data_string;
@@ -271,7 +271,7 @@ class Data_interaction {
                 if (row !== undefined ) {
                     resolve(row)
                 } else {
-                    reject(`No canvas_permission with id ${user_id} were found`)
+                    reject(`No canvas_permission with id ${user_id} ${canvas_id} were found`)
                 }
 
 

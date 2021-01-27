@@ -14,7 +14,7 @@ var indexRouter = require('./routes/index_route');
 var configRouter = require('./routes/config_view');
 var usersRouter = require('./routes/users_route');
 var canvasRouter = require('./routes/canvas_route');
-var dataRouter = require('./routes/canvas_route');
+var dataRouter = require('./routes/data_interaction');
 
 var app = express();
 
