@@ -4,18 +4,31 @@ let User = require('../lib/User')
 let Canvas = require('../lib/Canvas');
 let Note = require('../lib/Note');
 let Connection = require('../lib/Connection');
-let Picture = require('../lib/Picture');
+let Picture = require('../lib/Picture')
+
+class ObjectNotFoundError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "ObjectNotFoundError";
+    }
+}
 
 function db_init() {
     return new Promise(function (resolve, reject) {
         db.serialize(function () {
-            db.run(`PRAGMA foreign_keys = ON;`);
+            db.run(`PRAGMA foreign_keys = ON;`, function (err) {
+                err.message = (`Unable to initialize database  err :${err.message}`)
+                reject(err)
+            });
 
             db.run(`CREATE TABLE IF NOT EXISTS "users" (
                 "id" INTEGER PRIMARY KEY,
                 "nick" TEXT NOT NULL UNIQUE,
                 "settings" TEXT
-                );`);
+                );`, function (err) {
+                err.message = (`Unable to initialize database  err :${err.message}`)
+                reject(err)
+            });
 
             db.run(`CREATE TABLE IF NOT EXISTS "canvasses" (
                 "id" INTEGER PRIMARY KEY,
@@ -25,7 +38,10 @@ function db_init() {
                 "default_perm" INTEGER DEFAULT (1), -- ENUM ('none','read','write')
                 "settings" TEXT,
                     FOREIGN KEY (owner_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE
-                );`);
+                );`, function (err) {
+                err.message = (`Unable to initialize database  err :${err.message}`)
+                reject(err)
+            });
 
             db.run(`CREATE TABLE IF NOT EXISTS "canvasses_permissions" (
                 "user_id" INTEGER NOT NULL,
@@ -34,7 +50,10 @@ function db_init() {
                     PRIMARY KEY(user_id,canvas_id)
                     FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE
                     FOREIGN KEY (canvas_id) REFERENCES canvasses (id) ON UPDATE CASCADE ON DELETE CASCADE
-                );`);
+                );`, function (err) {
+                err.message = (`Unable to initialize database  err :${err.message}`)
+                reject(err)
+            });
 
             db.run(`CREATE TABLE IF NOT EXISTS "notes" (
                 "id" INTEGER PRIMARY KEY,
@@ -52,7 +71,10 @@ function db_init() {
                     FOREIGN KEY (canvas_id) REFERENCES canvasses (id) ON UPDATE CASCADE ON DELETE CASCADE,
                     FOREIGN KEY (owner_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL
                     FOREIGN KEY (last_editor_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL
-                );`);
+                );`, function (err) {
+                err.message = (`Unable to initialize database  err :${err.message}`)
+                reject(err)
+            });
 
             db.run(`CREATE TABLE IF NOT EXISTS "connections" (
                 "id" INTEGER PRIMARY KEY,
@@ -76,7 +98,10 @@ function db_init() {
                     FOREIGN KEY (owner_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL
                     FOREIGN KEY (last_editor_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL
                 );
-                `);
+                `, function (err) {
+                err.message = (`Unable to initialize database  err :${err.message}`)
+                reject(err)
+            });
             db.run(`CREATE TABLE IF NOT EXISTS "pictures" (
                 "id" INTEGER PRIMARY KEY,
                 "title" TEXT,
@@ -94,39 +119,60 @@ function db_init() {
                     FOREIGN KEY (owner_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL
                     FOREIGN KEY (last_editor_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL
                 );
-                `);
+                `, function (err) {
+                err.message = (`Unable to initialize database  err :${err.message}`)
+                reject(err)
+            });
 
             db.run(`CREATE TRIGGER IF NOT EXISTS note_last_edited_upd AFTER UPDATE OF last_editor_id ON notes
                 BEGIN
                     UPDATE notes SET last_edited_at=strftime('%s','now') WHERE id = NEW.id;
                 END;
-                `);
+                `, function (err) {
+                err.message = (`Unable to initialize database  err :${err.message}`)
+                reject(err)
+            });
             db.run(`CREATE TRIGGER IF NOT EXISTS conn_last_edited_upd AFTER UPDATE OF last_editor_id ON connections
                 BEGIN
                     UPDATE connections SET last_edited_at=strftime('%s','now') WHERE id = NEW.id;
                 END;
-                `);
+                `, function (err) {
+                err.message = (`Unable to initialize database  err :${err.message}`)
+                reject(err)
+            });
             db.run(`CREATE TRIGGER IF NOT EXISTS pic_last_edited_upd AFTER UPDATE OF last_editor_id ON pictures
                 BEGIN
                     UPDATE pictures SET last_edited_at=strftime('%s','now') WHERE id = NEW.id;
                 END;
-                `);
+                `, function (err) {
+                err.message = (`Unable to initialize database  err :${err.message}`)
+                reject(err)
+            });
 
             db.run(`CREATE TRIGGER IF NOT EXISTS note_last_editor_init AFTER INSERT ON notes
                 BEGIN
                     UPDATE notes SET last_editor_id=NEW.owner_id WHERE id = NEW.id;
                 END;
-                `);
+                `, function (err) {
+                err.message = (`Unable to initialize database  err :${err.message}`)
+                reject(err)
+            });
             db.run(`CREATE TRIGGER IF NOT EXISTS conn_last_editor_init AFTER INSERT ON connections
                 BEGIN
                     UPDATE connections SET last_editor_id=NEW.owner_id WHERE id = NEW.id;
                 END;
-                `);
+                `, function (err) {
+                err.message = (`Unable to initialize database  err :${err.message}`)
+                reject(err)
+            });
             db.run(`CREATE TRIGGER IF NOT EXISTS pic_last_editor_init AFTER INSERT on pictures
                 BEGIN
                     UPDATE pictures SET last_editor_id=NEW.owner_id WHERE id = NEW.id;
                 END;
-                `);
+                `, function (err) {
+                err.message = (`Unable to initialize database  err :${err.message}`)
+                reject(err)
+            });
             console.log("initialized database")
         })
         resolve()
@@ -134,23 +180,33 @@ function db_init() {
 }
 
 function db_load_sample_data() {
-    db.serialize(function () {
-        db.run(`INSERT INTO users (nick) VALUES
+    return new Promise(function (resolve, reject) {
+        db.serialize(function () {
+            db.run(`INSERT INTO users (nick) VALUES
                 ("Kot"),
                 ("Foo"),
                 ("ShiZ");
-                `);
-        db.run(`INSERT INTO canvasses (title,owner_id) VALUES
+                `, function (err) {
+                err.message = (`Unable to insert sample data err :${err.message}`)
+                reject(err)
+            });
+            db.run(`INSERT INTO canvasses (title,owner_id) VALUES
                 ("Canvas1",1),
                 ("Canvas2",1),
                 ("Canvas3",2);
-                `);
-        db.run(`INSERT INTO canvasses_permissions (user_id,canvas_id,permission) VALUES
+                `, function (err) {
+                err.message = (`Unable to insert sample data err :${err.message}`)
+                reject(err)
+            });
+            db.run(`INSERT INTO canvasses_permissions (user_id,canvas_id,permission) VALUES
                 (2,1,2),
                 (3,1,1),
                 (1,3,2);
-                `);
-        db.run(`INSERT INTO notes (owner_id,canvas_id,coordinate_x,coordinate_y,title) VALUES
+                `, function (err) {
+                err.message = (`Unable to insert sample data err :${err.message}`)
+                reject(err)
+            });
+            db.run(`INSERT INTO notes (owner_id,canvas_id,coordinate_x,coordinate_y,title) VALUES
                 (1,1,10,100,"Note1"),
                 (1,1,500,100,"Note2"),
                 (2,1,1000,500,"Note3"),
@@ -165,8 +221,11 @@ function db_load_sample_data() {
                 (2,3,200,-200,"Note10"),
                 (3,3,200,200,"Note11"),
                 (3,3,-200,200,"Note12");
-                `);
-        db.run(`INSERT INTO connections
+                `, function (err) {
+                err.message = (`Unable to insert sample data err :${err.message}`)
+                reject(err)
+            });
+            db.run(`INSERT INTO connections
                 (canvas_id,owner_id,
                 origin_conn_type,origin_conn_id,origin_conn_pos_type,origin_conn_pos,
                 target_conn_type,target_conn_id,target_conn_pos_type,target_conn_pos) VALUES
@@ -186,7 +245,12 @@ function db_load_sample_data() {
                 (3,2,    1,11,2,null,    1,12,2,null),
                 (3,3,    1,12,2,null,    4,null,1,"-300, 300"),
                 (3,3,    4,null,1,"300, 300",    1,11,2,null);
-                `);
+                `, function (err) {
+                err.message = (`Unable to insert sample data err :${err.message}`)
+                reject(err)
+            });
+        })
+        resolve()
     })
 }
 
@@ -229,14 +293,15 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.get(`SELECT * FROM users WHERE id = ${user_id};`, [], function (err, row) {
                 if (err) {
-                    reject(`Unable to SELECT user with id ${user_id}| err :${err}`)
+                    err.message = `Unable to SELECT user with id ${user_id}| err :${err}`
+                    reject(err)
                 }
                 if (row !== undefined) {
                     let res = new User()
                     Object.assign(res, row)
                     resolve(res)
                 } else {
-                    reject(`No user with id ${user_id} were found`)
+                    reject(new ObjectNotFoundError(`No user with id ${user_id} were found`))
                 }
 
             })
@@ -247,14 +312,15 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.get(`SELECT * FROM canvasses WHERE id = ${canvas_id};`, [], function (err, row) {
                 if (err) {
-                    reject(`Unable to SELECT canvas with id ${canvas_id}| err :${err}`)
+                    err.message = (`Unable to SELECT canvas with id ${canvas_id}| err :${err}`)
+                    reject(err)
                 }
                 if (row !== undefined) {
                     let res = new Canvas()
                     Object.assign(res, row)
                     resolve(res)
                 } else {
-                    reject(`No canvas with id ${user_id} were found`)
+                    reject(new ObjectNotFoundError(`No canvas with id ${canvas_id} were found`))
                 }
 
             })
@@ -265,12 +331,13 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.get(`SELECT * FROM canvasses_permissions WHERE (user_id = ${user_id} and canvas_id = ${canvas_id});`, [], function (err, row) {
                 if (err) {
-                    reject(`Unable to SELECT canvas_permission with U_id ${user_id}, C_id ${canvas_id} | err :${err}`)
+                    err.message = (`Unable to SELECT canvas_permission with U_id ${user_id}, C_id ${canvas_id} | err :${err}`)
+                    reject(err)
                 }
                 if (row !== undefined) {
                     resolve(row)
                 } else {
-                    reject(`No canvas_permission with id ${user_id} ${canvas_id} were found`)
+                    reject(new ObjectNotFoundError(`No canvas_permission with id ${user_id} ${canvas_id} were found`))
                 }
 
 
@@ -282,14 +349,15 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.get(`SELECT * FROM notes WHERE id = ${note_id};`, [], function (err, row) {
                 if (err) {
-                    reject(`Unable to SELECT note with id ${note_id}| err :${err}`)
+                    err.message = (`Unable to SELECT note with id ${note_id}| err :${err}`)
+                    reject(err)
                 }
                 if (row !== undefined) {
                     let res = new Note()
                     Object.assign(res, row)
                     resolve(res)
                 } else {
-                    reject(`No note with id ${user_id} were found`)
+                    reject(new ObjectNotFoundError(`No note with id ${user_id} were found`))
                 }
 
             })
@@ -300,14 +368,15 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.get(`SELECT * FROM connections WHERE id = ${connection_id};`, [], function (err, row) {
                 if (err) {
-                    reject(`Unable to SELECT connection with id ${connection_id}| err :${err}`)
+                    err.message = (`Unable to SELECT connection with id ${connection_id}| err :${err}`)
+                    reject(err)
                 }
                 if (row !== undefined) {
                     let res = new Connection()
                     Object.assign(res, row)
                     resolve(res)
                 } else {
-                    reject(`No connection with id ${connection_id} were found`)
+                    reject(new ObjectNotFoundError(`No connection with id ${connection_id} were found`))
                 }
 
             })
@@ -318,14 +387,15 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.get(`SELECT * FROM pictures WHERE id = ${picture_id};`, [], function (err, row) {
                 if (err) {
-                    reject(`Unable to SELECT picture with id ${picture_id}| err :${err}`)
+                    err.message = (`Unable to SELECT picture with id ${picture_id}| err :${err}`)
+                    reject(err)
                 }
                 if (row !== undefined) {
                     let res = new Picture()
                     Object.assign(res, row)
                     resolve(res)
                 } else {
-                    reject(`No picture with id ${picture_id} were found`)
+                    reject(new ObjectNotFoundError(`No picture with id ${picture_id} were found`))
                 }
 
             })
@@ -337,7 +407,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.run(`UPDATE users SET ${data_string} WHERE id = ${user_id};`, [], function (err) {
                 if (err) {
-                    reject(`Unable to update user with id ${user_id} and data ${data_string}| err :${err}`)
+                    err.message = (`Unable to update user with id ${user_id} and data ${data_string}| err :${err}`)
+                    reject(err)
                 }
                 resolve()
             })
@@ -349,7 +420,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.run(`UPDATE canvasses SET ${data_string} WHERE id = ${canvas_id};`, [], function (err) {
                 if (err) {
-                    reject(`Unable to update canvas with id ${canvas_id} and data ${data_string}| err :${err}`)
+                    err.message = (`Unable to update canvas with id ${canvas_id} and data ${data_string}| err :${err}`)
+                    reject(err)
                 }
                 resolve()
             })
@@ -361,7 +433,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.run(`UPDATE canvasses_permissions SET ${data_string} WHERE (user_id = ${user_id} and canvas_id = ${canvas_id});`, [], function (err) {
                 if (err) {
-                    reject(`Unable to update canvas_permission with u_id ${user_id}, c_id ${canvas_id} and data ${data_string}| err :${err}`)
+                    err.message = (`Unable to update canvas_permission with u_id ${user_id}, c_id ${canvas_id} and data ${data_string}| err :${err}`)
+                    reject(err)
                 }
                 resolve()
             })
@@ -373,7 +446,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.run(`UPDATE notes SET ${data_string} WHERE id = ${note_id};`, [], function (err) {
                 if (err) {
-                    reject(`Unable to update note with id ${note_id} and data ${data_string}| err :${err}`)
+                    err.message = (`Unable to update note with id ${note_id} and data ${data_string}| err :${err}`)
+                    reject(err)
                 }
                 resolve()
             })
@@ -385,7 +459,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.run(`UPDATE notes SET ${data_string} WHERE id = ${connection_id};`, [], function (err) {
                 if (err) {
-                    reject(`Unable to update connection with id ${connection_id} and data ${data_string}| err :${err}`)
+                    err.message = (`Unable to update connection with id ${connection_id} and data ${data_string}| err :${err}`)
+                    reject(err)
                 }
                 resolve()
             })
@@ -397,7 +472,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.run(`UPDATE notes SET ${data_string} WHERE id = ${picture_id};`, [], function (err) {
                 if (err) {
-                    reject(`Unable to update picture with id ${picture_id} and data ${data_string}| err :${err}`)
+                    err.message = (`Unable to update picture with id ${picture_id} and data ${data_string}| err :${err}`)
+                    reject(err)
                 }
                 resolve()
             })
@@ -408,14 +484,15 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.get(`SELECT * FROM users WHERE nick = "${user_nick}";`, [], function (err, row) {
                 if (err) {
-                    reject(`Unable to select user with nick ${user_nick}| err :${err}`)
+                    err.message = (`Unable to select user with nick ${user_nick}| err :${err}`)
+                    reject(err)
                 }
                 if ((row !== undefined)) {
                     let res = new User()
                     Object.assign(res, row)
                     resolve(res)
                 } else {
-                    reject(`No user with nick ${user_nick} were found`)
+                    reject(new ObjectNotFoundError(`No user with nick ${user_nick} were found`))
                 }
 
             })
@@ -427,7 +504,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.all(`SELECT * FROM canvasses_permissions WHERE (user_id = ${user_id} and permission > 0);`, [], function (err, rows) {
                 if (err) {
-                    reject(`Unable to select permitted_canvasses with user_id ${user_id}| err :${err}`)
+                    err.message = (`Unable to select permitted_canvasses with user_id ${user_id}| err :${err}`)
+                    reject(err)
                 }
                 if ((rows !== undefined) && (rows.length > 0)) {
                     let res = []
@@ -436,7 +514,8 @@ class Data_interaction {
                     });
                     db.all(`SELECT id FROM canvasses WHERE (default_perm > 0) OR (owner_id = ${user_id});`, [], function (err, rows) {
                         if (err) {
-                            reject(`Unable to select canvasses with (default_perm > 0) OR (owner_id = ${user_id})| err :${err}`)
+                            err.message = (`Unable to select canvasses with (default_perm > 0) OR (owner_id = ${user_id})| err :${err}`)
+                            reject(err)
                         }
                         if ((rows !== undefined) && (rows.length > 0)) {
                             rows.forEach(row => {
@@ -444,7 +523,7 @@ class Data_interaction {
                             });
                         }
                         if (res.length === 0) {
-                            reject(`User with id ${user_id} can't access any canvasses`)
+                            reject(new ObjectNotFoundError(`User with id ${user_id} can't access any canvasses`))
                         }
                         res = Array.from([...new Set(res)]); // remove duplicates
                         resolve(res)
@@ -461,7 +540,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.all(`SELECT * FROM canvasses WHERE id IN (${str_canvas_id_list});`, [], function (err, rows) {
                 if (err) {
-                    reject(`Unable to select canvases with id ${canvas_id_list}| err :${err}`)
+                    err.message = (`Unable to select canvases with id ${canvas_id_list}| err :${err}`)
+                    reject(err)
                 }
                 if ((rows !== undefined) && (rows.length > 0)) {
                     let res = []
@@ -472,7 +552,7 @@ class Data_interaction {
                     });
                     resolve(res)
                 } else {
-                    reject(`No canvases with id ${canvas_id_list}`)
+                    reject(new ObjectNotFoundError(`No canvases with id ${canvas_id_list}`))
                 }
 
             })
@@ -483,7 +563,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.all(`SELECT * FROM notes WHERE canvas_id = ${canvas_id};`, [], function (err, rows) {
                 if (err) {
-                    reject(`Unable to select notes with canvas_id ${canvas_id}| err :${err}`)
+                    err.message = (`Unable to select notes with canvas_id ${canvas_id}| err :${err}`)
+                    reject(err)
                 }
                 if ((rows !== undefined) && (rows.length > 0)) {
                     let res = []
@@ -494,7 +575,7 @@ class Data_interaction {
                     });
                     resolve(res)
                 } else {
-                    reject(`No notes with canvas_id ${canvas_id}`)
+                    reject(new ObjectNotFoundError(`No notes with canvas_id ${canvas_id}`))
                 }
             })
         })
@@ -504,7 +585,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.all(`SELECT * FROM connections WHERE canvas_id = ${canvas_id};`, [], function (err, rows) {
                 if (err) {
-                    reject(`Unable to select connections with canvas_id ${canvas_id}| err :${err}`)
+                    err.message = (`Unable to select connections with canvas_id ${canvas_id}| err :${err}`)
+                    reject(err)
                 }
                 if ((rows !== undefined) && (rows.length > 0)) {
                     let res = []
@@ -515,7 +597,7 @@ class Data_interaction {
                     });
                     resolve(res)
                 } else {
-                    reject(`No connections with canvas_id ${canvas_id}`)
+                    reject(new ObjectNotFoundError(`No connections with canvas_id ${canvas_id}`))
                 }
             })
         })
@@ -525,7 +607,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.all(`SELECT * FROM pictures WHERE canvas_id = ${canvas_id};`, [], function (err, rows) {
                 if (err) {
-                    reject(`Unable to select pictures with canvas_id ${canvas_id}| err :${err}`)
+                    err.message = (`Unable to select pictures with canvas_id ${canvas_id}| err :${err}`)
+                    reject(err)
                 }
                 if ((rows !== undefined) && (rows.length > 0)) {
                     let res = []
@@ -536,7 +619,7 @@ class Data_interaction {
                     });
                     resolve(res)
                 } else {
-                    reject(`No pictures with canvas_id ${canvas_id}`)
+                    reject(new ObjectNotFoundError(`No pictures with canvas_id ${canvas_id}`))
                 }
             })
         })
@@ -547,7 +630,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.get(`INSERT INTO users (nick) VALUES (${str_data_list});";`, [], function (err) {
                 if (err) {
-                    reject(`Unable to insert user with user_nick ${user_nick}| err :${err}`)
+                    err.message = (`Unable to insert user with user_nick ${user_nick}| err :${err}`)
+                    reject(err)
                 }
                 resolve()
             })
@@ -559,7 +643,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.get(`INSERT INTO canvasses (title,owner_id) VALUES (${str_data_list});`, [], function (err) {
                 if (err) {
-                    reject(`Unable to insert canvas with user_nick ${title} owner_id ${owner_id}| err :${err}`)
+                    err.message = (`Unable to insert canvas with user_nick ${title} owner_id ${owner_id}| err :${err}`)
+                    reject(err)
                 }
                 resolve()
             })
@@ -571,7 +656,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.get(`INSERT INTO canvasses_permissions (user_id,canvas_id,permission) VALUES (${str_data_list});`, [], function (err) {
                 if (err) {
-                    reject(`Unable to insert canvas_permission with user_id ${user_id} canvas_id ${canvas_id}| err :${err}`)
+                    err.message = (`Unable to insert canvas_permission with user_id ${user_id} canvas_id ${canvas_id}| err :${err}`)
+                    reject(err)
                 }
                 resolve()
             })
@@ -583,7 +669,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.get(`INSERT INTO notes (canvas_id,owner_id,coordinate_x,coordinate_y) VALUES (${str_data_list});`, [], function (err) {
                 if (err) {
-                    reject(`Unable to insert note with canvas_id ${canvas_id} owner_id ${owner_id}| err :${err}`)
+                    err.message = (`Unable to insert note with canvas_id ${canvas_id} owner_id ${owner_id}| err :${err}`)
+                    reject(err)
                 }
                 resolve()
             })
@@ -601,7 +688,8 @@ class Data_interaction {
                     target_conn_type,target_conn_id,target_conn_pos_type,target_conn_pos) 
                     VALUES (${str_data_list});`, [], function (err) {
                 if (err) {
-                    reject(`Unable to insert connection with canvas_id ${canvas_id} owner_id ${owner_id}| err :${err}`)
+                    err.message = (`Unable to insert connection with canvas_id ${canvas_id} owner_id ${owner_id}| err :${err}`)
+                    reject(err)
                 }
                 resolve()
             })
@@ -613,7 +701,8 @@ class Data_interaction {
         return new Promise(function (resolve, reject) {
             db.get(`INSERT INTO pictures (canvas_id,owner_id,coordinate_x,coordinate_y,content) VALUES (${str_data_list});`, [], function (err) {
                 if (err) {
-                    reject(`Unable to insert picture with canvas_id ${canvas_id} owner_id ${owner_id}| err :${err}`)
+                    err.message = (`Unable to insert picture with canvas_id ${canvas_id} owner_id ${owner_id}| err :${err}`)
+                    reject(err)
                 }
                 resolve()
             })
@@ -626,10 +715,11 @@ class Data_interaction {
             Data_interaction.get_canvas_permission(user_id, canvas_id).then(function (row) {
                 resolve(row.permission)
             }).catch(function (reason) {
-                if (reason === `No canvas_permission with id ${user_id} were found`) {
+                if (reason.name === "ObjectNotFoundError") {
                     db.get(`SELECT owner_id,default_perm FROM canvasses WHERE id = ${canvas_id}`, [], function (err, row) {
                         if (err) {
-                            reject(`Unable to SELECT FROM canvas with id = ${canvas_id} | err :${err}`)
+                            err.message = (`Unable to SELECT FROM canvas with id = ${canvas_id} | err :${err}`)
+                            reject(err)
                         }
                         if ((row !== undefined)) {
                             if (row.owner_id === user_id) {
@@ -638,7 +728,7 @@ class Data_interaction {
                                 resolve(row.default_perm)
                             }
                         } else {
-                            reject(`No canvas with id ${canvas_id} were found`)
+                            reject(new ObjectNotFoundError(`No canvas with id ${canvas_id} were found`))
                         }
 
 
