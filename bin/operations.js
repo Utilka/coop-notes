@@ -1,8 +1,4 @@
 var db = require('../db_data/database.js')
-var User = require("../lib/User.js")
-var Note = require("../lib/Note.js")
-var Connection = require("../lib/Connection.js")
-var Canvas = require("../lib/Canvas.js")
 
 
 db.db_init().then(function () {
@@ -23,11 +19,6 @@ db.db_init().then(function () {
     // }).catch(function (reason) {
     //     console.log(reason)
     // })
-    db.di.check_user_canvas_permission(1, 1).then(res => {
-        console.log(res)
-    }).catch(function (reason) {
-        console.log(reason)
-    })
     // db.di.check_user_canvas_permission(1, 1).then(res => {
     //     console.log(res)
     // }).catch(function (reason) {
