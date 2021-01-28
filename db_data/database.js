@@ -39,7 +39,7 @@ function db_init() {
                 "title" TEXT,
                 "owner_id" INTEGER,
                 "created_at" INTEGER DEFAULT (strftime('%s','now')),
-                "default_perm" INTEGER DEFAULT (1), -- ENUM ('none','read','write')
+                "default_perm" INTEGER DEFAULT (0), -- ENUM ('none','read','write')
                 "settings" TEXT,
                     FOREIGN KEY (owner_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE
                 );`, function (err) {
@@ -538,33 +538,35 @@ class Data_interaction {
     static get_permitted_canvasses(user_id) {
         // returns list of canvas id that user can access
         return new Promise(function (resolve, reject) {
+            let res = []
             db.all(`SELECT * FROM canvasses_permissions WHERE (user_id = ${user_id} and permission > 0);`, [], function (err, rows) {
                 if (err) {
                     err = (`Unable to select permitted_canvasses with user_id ${user_id}| err :${err}`)
                     reject(err)
                 }
+
                 if ((rows !== undefined) && (rows.length > 0)) {
-                    let res = []
                     rows.forEach(row => {
                         res.push(row.canvas_id)
-                    });
-                    db.all(`SELECT id FROM canvasses WHERE (default_perm > 0) OR (owner_id = ${user_id});`, [], function (err, rows) {
-                        if (err) {
-                            err = (`Unable to select canvasses with (default_perm > 0) OR (owner_id = ${user_id})| err :${err}`)
-                            reject(err)
-                        }
-                        if ((rows !== undefined) && (rows.length > 0)) {
-                            rows.forEach(row => {
-                                res.push(row.id)
-                            });
-                        }
-                        if (res.length === 0) {
-                            reject(new ObjectNotFoundError(`User with id ${user_id} can't access any canvasses`))
-                        }
-                        res = Array.from([...new Set(res)]); // remove duplicates
-                        resolve(res)
-                    })
-                }
+                    });}
+
+                db.all(`SELECT id FROM canvasses WHERE (default_perm > 0) OR (owner_id = ${user_id});`, [], function (err, rows) {
+                    if (err) {
+                        err = (`Unable to select canvasses with (default_perm > 0) OR (owner_id = ${user_id})| err :${err}`)
+                        reject(err)
+                    }
+                    if ((rows !== undefined) && (rows.length > 0)) {
+                        rows.forEach(row => {
+                            res.push(row.id)
+                        });
+                    }
+                    if (res.length === 0) {
+                        reject(new ObjectNotFoundError(`User with id ${user_id} can't access any canvasses`))
+                    }
+                    res = Array.from([...new Set(res)]); // remove duplicates
+                    resolve(res)
+                })
+
 
 
             })

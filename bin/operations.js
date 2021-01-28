@@ -13,6 +13,11 @@ db.db_init().then(function () {
     // }).catch(function (reason) {
     //     console.log(reason)
     // })
+    db.di.get_permitted_canvasses(3).then(res => {
+        console.log(res)
+    }).catch(function (reason) {
+        console.log(reason)
+    })
     // db.di.get_canvasses_list([1,2,3]).then(row => {console.log(row)}).catch(function (reason) {console.log(reason)})
     // db.di.get_permitted_canvasses(2).then(db.di.get_canvasses_list).then(res => {
     //     console.log(res)
