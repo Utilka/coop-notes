@@ -493,7 +493,7 @@ class Data_interaction {
     static upd_connection(connection_id, data) {
         let data_string = data_dict_stringify(data)
         return new Promise(function (resolve, reject) {
-            db.run(`UPDATE notes SET ${data_string} WHERE id = ${connection_id};`, [], function (err) {
+            db.run(`UPDATE connections SET ${data_string} WHERE id = ${connection_id};`, [], function (err) {
                 if (err) {
                     err.message = (`Unable to update connection with id ${connection_id} and data ${data_string}| err :${err}`)
                     reject(err)
@@ -506,7 +506,7 @@ class Data_interaction {
     static upd_picture(picture_id, data) {
         let data_string = data_dict_stringify(data)
         return new Promise(function (resolve, reject) {
-            db.run(`UPDATE notes SET ${data_string} WHERE id = ${picture_id};`, [], function (err) {
+            db.run(`UPDATE pictures SET ${data_string} WHERE id = ${picture_id};`, [], function (err) {
                 if (err) {
                     err.message = (`Unable to update picture with id ${picture_id} and data ${data_string}| err :${err}`)
                     reject(err)
@@ -664,7 +664,7 @@ class Data_interaction {
     static insert_user(user_nick) {
         let str_data_list = data_list_stringify(arguments);
         return new Promise(function (resolve, reject) {
-            db.get(`INSERT INTO users (nick) VALUES (${str_data_list});";`, [], function (err) {
+            db.get(`INSERT INTO users (nick) VALUES (${str_data_list});`, [], function (err) {
                 if (err) {
                     err.message = (`Unable to insert user with user_nick ${user_nick}| err :${err}`)
                     reject(err)
