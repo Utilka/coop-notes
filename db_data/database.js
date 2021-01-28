@@ -17,8 +17,10 @@ function db_init() {
     return new Promise(function (resolve, reject) {
         db.serialize(function () {
             db.run(`PRAGMA foreign_keys = ON;`, function (err) {
-                err.message = (`Unable to initialize database  err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to initialize database  err :${err.message}`)
+                    reject(err)
+                }
             });
 
             db.run(`CREATE TABLE IF NOT EXISTS "users" (
@@ -26,8 +28,10 @@ function db_init() {
                 "nick" TEXT NOT NULL UNIQUE,
                 "settings" TEXT
                 );`, function (err) {
-                err.message = (`Unable to initialize database  err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to initialize database  err :${err.message}`)
+                    reject(err)
+                }
             });
 
             db.run(`CREATE TABLE IF NOT EXISTS "canvasses" (
@@ -39,8 +43,10 @@ function db_init() {
                 "settings" TEXT,
                     FOREIGN KEY (owner_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE
                 );`, function (err) {
-                err.message = (`Unable to initialize database  err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to initialize database  err :${err.message}`)
+                    reject(err)
+                }
             });
 
             db.run(`CREATE TABLE IF NOT EXISTS "canvasses_permissions" (
@@ -51,8 +57,10 @@ function db_init() {
                     FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE
                     FOREIGN KEY (canvas_id) REFERENCES canvasses (id) ON UPDATE CASCADE ON DELETE CASCADE
                 );`, function (err) {
-                err.message = (`Unable to initialize database  err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to initialize database  err :${err.message}`)
+                    reject(err)
+                }
             });
 
             db.run(`CREATE TABLE IF NOT EXISTS "notes" (
@@ -72,8 +80,10 @@ function db_init() {
                     FOREIGN KEY (owner_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL
                     FOREIGN KEY (last_editor_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL
                 );`, function (err) {
-                err.message = (`Unable to initialize database  err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to initialize database  err :${err.message}`)
+                    reject(err)
+                }
             });
 
             db.run(`CREATE TABLE IF NOT EXISTS "connections" (
@@ -99,8 +109,10 @@ function db_init() {
                     FOREIGN KEY (last_editor_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL
                 );
                 `, function (err) {
-                err.message = (`Unable to initialize database  err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to initialize database  err :${err.message}`)
+                    reject(err)
+                }
             });
             db.run(`CREATE TABLE IF NOT EXISTS "pictures" (
                 "id" INTEGER PRIMARY KEY,
@@ -120,8 +132,10 @@ function db_init() {
                     FOREIGN KEY (last_editor_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL
                 );
                 `, function (err) {
-                err.message = (`Unable to initialize database  err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to initialize database  err :${err.message}`)
+                    reject(err)
+                }
             });
 
             db.run(`CREATE TRIGGER IF NOT EXISTS note_last_edited_upd AFTER UPDATE OF last_editor_id ON notes
@@ -129,24 +143,30 @@ function db_init() {
                     UPDATE notes SET last_edited_at=strftime('%s','now') WHERE id = NEW.id;
                 END;
                 `, function (err) {
-                err.message = (`Unable to initialize database  err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to initialize database  err :${err.message}`)
+                    reject(err)
+                }
             });
             db.run(`CREATE TRIGGER IF NOT EXISTS conn_last_edited_upd AFTER UPDATE OF last_editor_id ON connections
                 BEGIN
                     UPDATE connections SET last_edited_at=strftime('%s','now') WHERE id = NEW.id;
                 END;
                 `, function (err) {
-                err.message = (`Unable to initialize database  err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to initialize database  err :${err.message}`)
+                    reject(err)
+                }
             });
             db.run(`CREATE TRIGGER IF NOT EXISTS pic_last_edited_upd AFTER UPDATE OF last_editor_id ON pictures
                 BEGIN
                     UPDATE pictures SET last_edited_at=strftime('%s','now') WHERE id = NEW.id;
                 END;
                 `, function (err) {
-                err.message = (`Unable to initialize database  err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to initialize database  err :${err.message}`)
+                    reject(err)
+                }
             });
 
             db.run(`CREATE TRIGGER IF NOT EXISTS note_last_editor_init AFTER INSERT ON notes
@@ -154,24 +174,30 @@ function db_init() {
                     UPDATE notes SET last_editor_id=NEW.owner_id WHERE id = NEW.id;
                 END;
                 `, function (err) {
-                err.message = (`Unable to initialize database  err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to initialize database  err :${err.message}`)
+                    reject(err)
+                }
             });
             db.run(`CREATE TRIGGER IF NOT EXISTS conn_last_editor_init AFTER INSERT ON connections
                 BEGIN
                     UPDATE connections SET last_editor_id=NEW.owner_id WHERE id = NEW.id;
                 END;
                 `, function (err) {
-                err.message = (`Unable to initialize database  err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to initialize database  err :${err.message}`)
+                    reject(err)
+                }
             });
             db.run(`CREATE TRIGGER IF NOT EXISTS pic_last_editor_init AFTER INSERT on pictures
                 BEGIN
                     UPDATE pictures SET last_editor_id=NEW.owner_id WHERE id = NEW.id;
                 END;
                 `, function (err) {
-                err.message = (`Unable to initialize database  err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to initialize database  err :${err.message}`)
+                    reject(err)
+                }
             });
             console.log("initialized database")
         })
@@ -187,24 +213,30 @@ function db_load_sample_data() {
                 ("Foo"),
                 ("ShiZ");
                 `, function (err) {
-                err.message = (`Unable to insert sample data err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to insert sample data err :${err.message}`)
+                    reject(err)
+                }
             });
             db.run(`INSERT INTO canvasses (title,owner_id) VALUES
                 ("Canvas1",1),
                 ("Canvas2",1),
                 ("Canvas3",2);
                 `, function (err) {
-                err.message = (`Unable to insert sample data err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to insert sample data err :${err.message}`)
+                    reject(err)
+                }
             });
             db.run(`INSERT INTO canvasses_permissions (user_id,canvas_id,permission) VALUES
                 (2,1,2),
                 (3,1,1),
                 (1,3,2);
                 `, function (err) {
-                err.message = (`Unable to insert sample data err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to insert sample data err :${err.message}`)
+                    reject(err)
+                }
             });
             db.run(`INSERT INTO notes (owner_id,canvas_id,coordinate_x,coordinate_y,title) VALUES
                 (1,1,10,100,"Note1"),
@@ -222,8 +254,10 @@ function db_load_sample_data() {
                 (3,3,200,200,"Note11"),
                 (3,3,-200,200,"Note12");
                 `, function (err) {
-                err.message = (`Unable to insert sample data err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to insert sample data err :${err.message}`)
+                    reject(err)
+                }
             });
             db.run(`INSERT INTO connections
                 (canvas_id,owner_id,
@@ -246,8 +280,10 @@ function db_load_sample_data() {
                 (3,3,    1,12,2,null,    4,null,1,"-300, 300"),
                 (3,3,    4,null,1,"300, 300",    1,11,2,null);
                 `, function (err) {
-                err.message = (`Unable to insert sample data err :${err.message}`)
-                reject(err)
+                if (err) {
+                    err.message = (`Unable to insert sample data err :${err.message}`)
+                    reject(err)
+                }
             });
         })
         resolve()
