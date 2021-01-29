@@ -26,6 +26,8 @@ function db_init() {
             db.run(`CREATE TABLE IF NOT EXISTS "users" (
                 "id" INTEGER PRIMARY KEY,
                 "nick" TEXT NOT NULL UNIQUE,
+                "password" TEXT, -- sha256 hash of the plain-text password
+                "salt" TEXT, -- salt that is appended to the password before it is hashed
                 "settings" TEXT
                 );`, function (err) {
                 if (err) {
@@ -210,7 +212,7 @@ function db_load_sample_data() {
         db.serialize(function () {
             db.run(`INSERT INTO users (nick) VALUES
                 ("Kot"),
-                ("Foo"),
+                ("Ignat"),
                 ("ShiZ");
                 `, function (err) {
                 if (err) {
@@ -307,8 +309,7 @@ function end_work() {
 function data_dict_stringify(data_dict) {
     // {"key":"value"}
     let data_string = ""
-    Object.entries(data_dict).forEach(entry => {
-        const [key, value] = entry;
+    Object.entries(data_dict).forEach(([key, value]) => {
         data_string += `${key} = "${value}",`
     });
     data_string = data_string.substring(0, data_string.length - 1);
@@ -317,8 +318,8 @@ function data_dict_stringify(data_dict) {
 
 function data_list_stringify(data_list) {
     let data_string = ""
-    data_list.forEach(entry => {
-        data_string += `${entry},`
+    Object.entries(data_list).forEach(([key, value]) => {
+        data_string += `${value},`
     });
     data_string = data_string.substring(0, data_string.length - 1);
     return data_string;
@@ -548,7 +549,8 @@ class Data_interaction {
                 if ((rows !== undefined) && (rows.length > 0)) {
                     rows.forEach(row => {
                         res.push(row.canvas_id)
-                    });}
+                    });
+                }
 
                 db.all(`SELECT id FROM canvasses WHERE (default_perm > 0) OR (owner_id = ${user_id});`, [], function (err, rows) {
                     if (err) {
@@ -566,7 +568,6 @@ class Data_interaction {
                     res = Array.from([...new Set(res)]); // remove duplicates
                     resolve(res)
                 })
-
 
 
             })
