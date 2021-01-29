@@ -2,7 +2,8 @@
     "ignore": [
         ".git",
         "node_modules/**/node_modules",
-        "./db_data"
+        "./config/config.json",
+        "./db_data/main.sqlite3"
     ],
     "watch": ["./bin/www", "./"],
     "ext": "js, json",
