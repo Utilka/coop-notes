@@ -568,8 +568,6 @@ class Data_interaction {
                     res = Array.from([...new Set(res)]); // remove duplicates
                     resolve(res)
                 })
-
-
             })
         })
     }
@@ -593,7 +591,6 @@ class Data_interaction {
                 } else {
                     reject(new ObjectNotFoundError(`No canvases with id ${canvas_id_list}`))
                 }
-
             })
         })
     }

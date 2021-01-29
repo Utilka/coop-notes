@@ -10,12 +10,6 @@ var logger = require('morgan');
 // read config file
 const config = require('./config/config.js');
 
-var indexRouter = require('./routes/index_route');
-var configRouter = require('./routes/config_view');
-var usersRouter = require('./routes/users_route');
-var canvasRouter = require('./routes/canvas_route');
-var dataRouter = require('./routes/data_interaction');
-
 var app = express();
 
 // view engine setup
@@ -28,11 +22,22 @@ app.use(express.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+
+
+var indexRouter = require('./routes/index_route');
+var usersRouter = require('./routes/users_route');
+var canvasRouter = require('./routes/canvas_route');
+
+var dataRouter = require('./routes/data_interaction');
+
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.use('/config', configRouter);
 app.use('/canvas', canvasRouter);
+
 app.use('/data', dataRouter);
+
+
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
