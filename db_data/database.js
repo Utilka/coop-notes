@@ -319,7 +319,7 @@ function data_dict_stringify(data_dict) {
 function data_list_stringify(data_list) {
     let data_string = ""
     Object.entries(data_list).forEach(([key, value]) => {
-        data_string += `${value},`
+        data_string += `"${value}",`
     });
     data_string = data_string.substring(0, data_string.length - 1);
     return data_string;
