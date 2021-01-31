@@ -4,10 +4,15 @@ var router = express.Router();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  //return res.render('index', {canvas: canvas  })
-  return res.redirect(`/canvas/0`);
+  console.log(req.user)
+  res.render('index')
+  // res.redirect(`/canvas/0`);
   // TODO Last opened canvas
-  //return res.redirect(`/Canvas/${}`);
+  // res.redirect(`/Canvas/${}`);
+});
+
+router.get('/ping', (req, res) => {
+  res.status(200).send("pong!");
 });
 
 module.exports = router;
