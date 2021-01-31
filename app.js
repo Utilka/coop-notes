@@ -4,7 +4,6 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
-
 let User = require('./lib/User')
 var db = require('./db_data/database.js')
 
@@ -14,6 +13,10 @@ var LocalStrategy = require('passport-local').Strategy;
 var session = require("express-session")
 var bodyParser = require("body-parser");
 
+let sqlite3 = require('sqlite3').verbose();
+let sqliteStoreFactory = require('express-session-sqlite').default;
+
+const SqliteStore = sqliteStoreFactory(session)
 // set environment variables
 // process.env.NODE_ENV = 'development';
 
@@ -30,6 +33,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(session({
+    store: new SqliteStore({
+        // Database library to use. Any library is fine as long as the API is compatible
+        // with sqlite3, such as sqlite3-offline
+        driver: sqlite3.Database,
+        path: './db_data/main.sqlite3',
+        // Session TimeToLive in milliseconds
+        ttl: 31557600000, // 1 Year
+        // (optional) Session id prefix. Default is no prefix.
+        prefix: 'sess:',
+    }),
     secret: 'keyboard cat',
     resave: false,
     saveUninitialized: false

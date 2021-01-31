@@ -4,7 +4,8 @@
   "private": true,
   "authors": [
     "Utilka, Andrii Bolshakov <uutilka@gmail.com>",
-    "Storm_Inside, Andrii Bolshakov"
+    "StormInside",
+    "HokageNeSpit"
   ],
   "scripts": {
     "startWin": "SET DEBUG=express-locallibrary-tutorial:* | node ./bin/www.js",
@@ -20,6 +21,7 @@
     "debug": "~2.6.9",
     "express": "^4.16.4",
     "express-session": "^1.17.1",
+    "express-session-sqlite": "^2.0.8",
     "http-errors": "^1.6.3",
     "lodash": "^4.17.20",
     "mongoose": "^5.11.10",
