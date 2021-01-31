@@ -3,7 +3,11 @@ var db = require('../db_data/database.js')
 
 db.db_init().then(function () {
     if ((global.gConfig.create_sample_data === true)) {
-        db.check_db_empty(db.db_load_sample_data)
+        db.check_db_empty().then(db.db_load_sample_data).catch(reason => {
+            if (reason !== "db is not empty") {
+                throw reason
+            }
+        })
     }
 }).then(function () {
     // db.di.get_user(1).then(row => {console.log(row)}).catch(function (reason) {console.log(reason)})

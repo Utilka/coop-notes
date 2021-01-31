@@ -218,7 +218,7 @@ function hashPassword(password, salt) {
 }
 
 function create_user(nick, password, salt) {
-    let res = new User(null,nick)
+    let res = new User(null, nick)
     res.password = hashPassword(password, salt)
     res.salt = salt
     return res
@@ -229,8 +229,6 @@ function db_load_sample_data() {
         let users = [create_user("Kot", "12345678", "123"),
             create_user("Ignat", "asdfgjkl", "123"),
             create_user("ShiZ", "<>asd", "123"),]
-
-        console.log(users)
         db.serialize(function () {
             db.run(`INSERT INTO users (nick,password,salt) VALUES
                 ("${users[0].nick}","${users[0].password}","${users[0].salt}"),
@@ -314,12 +312,18 @@ function db_load_sample_data() {
     })
 }
 
-function check_db_empty(callback) {
-    //calls callback function if there are no users in database
-    db.get("SELECT id FROM users;", [], function (err, row) {
-        if (row === undefined) {
-            callback()
-        }
+function check_db_empty() {
+    return new Promise(function (resolve, reject) {
+        db.get("SELECT id FROM users;", [], function (err, row) {
+            if (err) {
+                reject(err)
+            }
+            if (row === undefined) {
+                resolve()
+            } else {
+                reject("db is not empty")
+            }
+        })
     })
 }
 
@@ -683,10 +687,10 @@ class Data_interaction {
         })
     }
 
-    static insert_user(user_nick,password) {
+    static insert_user(user_nick, password) {
         let salt = "123"; // TODO generate salt securely
         let hashedPass = hashPassword(password, salt);
-        let str_data_list = data_list_stringify({user:user_nick,password:hashedPass,salt:salt});
+        let str_data_list = data_list_stringify({user: user_nick, password: hashedPass, salt: salt});
         return new Promise(function (resolve, reject) {
             db.get(`INSERT INTO users (nick,password,salt) VALUES (${str_data_list});`, [], function (err) {
                 if (err) {
