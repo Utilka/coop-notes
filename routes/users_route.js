@@ -16,7 +16,7 @@ router.get('/register', (req, res) => {
     res.render('register')
 })
 
-router.post('/login', passport.authenticate('local', {failureRedirect: '/user/login', failureFlash: true}),
+router.post('/login', passport.authenticate('local', {failureRedirect: '/user/login'}),
     function (req, res, next) {
         req.session.save((err) => {
             if (err) {
