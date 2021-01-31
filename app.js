@@ -68,7 +68,7 @@ function hashPassword(password, salt) {
 
 passport.use('local', new LocalStrategy(
     {
-        usernameField: "username",
+        usernameField: "nick",
         passwordField: "password"
     },function (nick, password, done) {
     db.db.get(`SELECT salt FROM users WHERE nick = "${nick}"`, function (err, row) {
