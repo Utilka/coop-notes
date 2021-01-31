@@ -3,6 +3,7 @@
         ".git",
         "node_modules/**/node_modules",
         "./config/config.json",
+        "./db_data/main.sqlite3-journal",
         "./db_data/main.sqlite3"
     ],
     "watch": ["./bin/www", "./"],

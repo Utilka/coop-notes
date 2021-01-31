@@ -6,6 +6,8 @@ let Note = require('../lib/Note');
 let Connection = require('../lib/Connection');
 let Picture = require('../lib/Picture')
 
+var crypto = require('crypto');
+
 class ObjectNotFoundError extends Error {
     constructor(message) {
         super(message);
@@ -207,13 +209,33 @@ function db_init() {
     })
 }
 
+
+function hashPassword(password, salt) {
+    var hash = crypto.createHash('sha256');
+    hash.update(password);
+    hash.update(salt);
+    return hash.digest('hex');
+}
+
+function create_user(nick, password, salt) {
+    let res = new User(null,nick)
+    res.password = hashPassword(password, salt)
+    res.salt = salt
+    return res
+}
+
 function db_load_sample_data() {
     return new Promise(function (resolve, reject) {
+        let users = [create_user("Kot", "12345678", "123"),
+            create_user("Ignat", "asdfgjkl", "123"),
+            create_user("ShiZ", "<>asd", "123"),]
+
+        console.log(users)
         db.serialize(function () {
-            db.run(`INSERT INTO users (nick) VALUES
-                ("Kot"),
-                ("Ignat"),
-                ("ShiZ");
+            db.run(`INSERT INTO users (nick,password,salt) VALUES
+                ("${users[0].nick}","${users[0].password}","${users[0].salt}"),
+                ("${users[1].nick}","${users[1].password}","${users[1].salt}"),
+                ("${users[2].nick}","${users[2].password}","${users[2].salt}");
                 `, function (err) {
                 if (err) {
                     err = (`Unable to insert sample data err :${err}`)
@@ -661,10 +683,12 @@ class Data_interaction {
         })
     }
 
-    static insert_user(user_nick) {
-        let str_data_list = data_list_stringify(arguments);
+    static insert_user(user_nick,password) {
+        let salt = "123"; // TODO generate salt securely
+        let hashedPass = hashPassword(password, salt);
+        let str_data_list = data_list_stringify({user:user_nick,password:hashedPass,salt:salt});
         return new Promise(function (resolve, reject) {
-            db.get(`INSERT INTO users (nick) VALUES (${str_data_list});`, [], function (err) {
+            db.get(`INSERT INTO users (nick,password,salt) VALUES (${str_data_list});`, [], function (err) {
                 if (err) {
                     err = (`Unable to insert user with user_nick ${user_nick}| err :${err}`)
                     reject(err)

@@ -1,15 +1,15 @@
-<h1> Login </h1>
+extends layout
 
-<form action="/users/login" method="POST">
-<div>
-<label for="email">Email</label>
-<input type="email" name="email" placeholder="Enter Email" />
-</div>
-<div>
-<label for="password">Password</label>
-<input type="password" name="password" placeholder="Enter Password"/>
-
-</div>
-<button type="submit" class="btn btn-primary btn-block">Login</button>
-
-</form>
+block main
+    .container
+        h1 Login Page
+        p.lead Say something worthwhile here.
+        br
+        form(role='form', action="/user/login",method="post", style='max-width: 300px;')
+            .form-group
+                input.form-control(type='text', name="username", placeholder='Enter Username')
+            .form-group
+                input.form-control(type='password', name="password", placeholder='Password')
+            button.btn.btn-default(type='submit') Submit
+        a(href='/')
+            button.btn.btn-primary(type="button") Cancel
