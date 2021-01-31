@@ -316,7 +316,7 @@ function db_load_sample_data() {
 
 function check_db_empty(callback) {
     //calls callback function if there are no users in database
-    db.get("SELECT * FROM users;", [], function (err, row) {
+    db.get("SELECT id FROM users;", [], function (err, row) {
         if (row === undefined) {
             callback()
         }
@@ -350,7 +350,7 @@ function data_list_stringify(data_list) {
 class Data_interaction {
     static get_user(user_id) {
         return new Promise(function (resolve, reject) {
-            db.get(`SELECT * FROM users WHERE id = ${user_id};`, [], function (err, row) {
+            db.get(`SELECT id,nick,settings FROM users WHERE id = ${user_id};`, [], function (err, row) {
                 if (err) {
                     err = `Unable to SELECT user with id ${user_id}| err :${err}`
                     reject(err)
@@ -541,7 +541,7 @@ class Data_interaction {
 
     static get_user_by_nick(user_nick) {
         return new Promise(function (resolve, reject) {
-            db.get(`SELECT * FROM users WHERE nick = "${user_nick}";`, [], function (err, row) {
+            db.get(`SELECT id,nick,settings FROM users WHERE nick = "${user_nick}";`, [], function (err, row) {
                 if (err) {
                     err = (`Unable to select user with nick ${user_nick}| err :${err}`)
                     reject(err)
