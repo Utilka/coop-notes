@@ -16,44 +16,46 @@ router.get('/:canvasID', function(req, res, next) {
         db.di.insert_canvas("New Canvas", user_id).then(function(){
             res.redirect(`/`);
         }).catch(function (reason) {
+            console.log(reason)
             res.render('user_error', {
                 message: `Some Big Problem(((`,
                 addition: reason.message
             })
         })
-    }
+    }else{
 
-    db.di.get_permitted_canvasses(user_id).then(p_canvases_ids => {
+        db.di.get_permitted_canvasses(user_id).then(p_canvases_ids => {
 
-        let canvasID = parseInt(req.params['canvasID'], 10)
-        if (p_canvases_ids.includes(canvasID)){
+            let canvasID = parseInt(req.params['canvasID'], 10)
+            if (p_canvases_ids.includes(canvasID)){
 
-            let canvas = db.di.get_canvas(canvasID).then(canvas => {
+                db.di.get_canvas(canvasID).then(canvas => {
 
-                res.render('canvas', {
-                    canvas: canvas,
+                    res.render('canvas', {
+                        canvas: canvas,
+                    })
+
+                }).catch(function (reason) {
+                    res.render('user_error', {
+                        message: `No Canvas With ID = ${canvasID} Was Found or...`,
+                        addition: reason.message
+                    })
                 })
 
-            }).catch(function (reason) {
+            }else{
                 res.render('user_error', {
-                    message: `No Canvas With ID = ${canvasID} Was Found or...`,
-                    addition: reason.message
+                    message: `You have no permission to access canvas with id = ${canvasID}`,
+                    addition: ''
                 })
-            })
-
-        }else{
-            res.render('user_error', {
-                message: `You have no permission to access canvas with id = ${canvasID}`,
-                addition: ''
-            })
-        }
+            }
 
 
-    }).catch(function (reason) {
-        console.log(reason)
-        
-        res.redirect(`/canvas/empty`)
-    })
+        }).catch(function (reason) {
+            console.log(reason)
+            
+            res.redirect(`/canvas/empty`)
+        })
+    }
 })
 
 module.exports = router;
