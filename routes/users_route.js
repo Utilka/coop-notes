@@ -28,18 +28,19 @@ router.post('/login', passport.authenticate('local', {failureRedirect: '/user/lo
 )
 
 router.post('/register', (req, res, next) => {
-    let nick = req.body.username
+    let nick = req.body.nick
     let password = req.body.password
 
-    db.di.insert_user(nick,password)
-    passport.authenticate('local')(req, res, () => {
-        req.session.save((err) => {
-            if (err) {
-                return next(err);
-            }
-            res.redirect('/');
-        });
-    });
+    db.di.insert_user(nick, password).then(() => {
+        passport.authenticate('local')(req, res, () => {
+            req.session.save((err) => {
+                if (err) {
+                    return next(err);
+                }
+                res.redirect('/');
+            });
+        })
+    }).catch(reason => { res.status(500).send(reason)})
 })
 
 //logout
